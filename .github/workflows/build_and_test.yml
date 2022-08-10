@@ -1,0 +1,104 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-and-test:
+    name: build and test (${{ matrix.build.target }})
+    runs-on: ${{ matrix.build.os }}
+    env:
+      TARGET: ${{ matrix.build.target }}
+      CC: ${{ matrix.build.cc }}
+      AR: ${{ matrix.build.ar }}
+      LD: ${{ matrix.build.ld }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - os: ubuntu-latest
+            cc: clang-12 -fPIC -fuse-ld=lld
+            ar: llvm-ar-12
+            ld: lld-12
+            target: aarch64-unknown-linux-gnu
+            native: false
+
+          - os: ubuntu-latest
+            cc: clang-12 -fPIC -fuse-ld=lld
+            ar: llvm-ar-12
+            ld: lld-12
+            target: x86_64-unknown-linux-gnu
+            native: true
+
+          - os: macos-latest
+            cc: clang -liconv
+            ar: ar
+            ld: ld
+            target: arm64-apple-darwin
+            native: false
+
+          - os: macos-latest
+            cc: clang
+            ar: ar
+            ld: ld
+            target: x86_64-apple-darwin
+            native: true
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: download kakasi
+        run: wget http://kakasi.namazu.org/stable/kakasi-2.3.6.tar.gz
+
+      - name: unpack kakasi
+        run: tar -xf kakasi-2.3.6.tar.gz
+
+      - run: sudo apt update && sudo apt install gcc-10-multilib-arm-linux-gnueabi
+        if: runner.os == 'Linux'
+
+      - name: apply patch
+        working-directory: ./kakasi-2.3.6
+        run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI User"
+          git init .
+          git add .
+          git commit -m 'dummy commit'
+          git am ../0001-fix-configure-with-the-latest-iconv.patch
+
+      - name: compile kakasi
+        working-directory: ./kakasi-2.3.6
+        run: |
+          rm configure
+          autoconf
+          ./configure \
+            --prefix="$PWD/local" \
+            CC="${{ matrix.build.cc }}" \
+            AR="${{ matrix.build.ar }}" \
+            LD="${{ matrix.build.ld }}" \
+            CFLAGS="-target ${{ matrix.build.target }}" \
+            --host=x86_64
+          make
+          make install
+          echo "KAKASI_ROOT=$PWD/local" >> $GITHUB_ENV
+
+      - name: show configure log
+        working-directory: ./kakasi-2.3.6
+        if: ${{ always() }}
+        run: cat config.log
+
+      - name: build
+        run: V=1 make all
+
+      - name: install ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1.0'
+          bundler-cache: true
+
+      - name: test
+        if: ${{ matrix.build.native }}
+        run: bundle install && make test

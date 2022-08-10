@@ -26,11 +26,14 @@ kanji_to_katakana.$(O): src/kanji_to_katakana.c
 	CFLAGS="$(CFLAGS)" ruby scripts/compile.rb $< $@
 CLEAN += kanji_to_katakana.o
 
+all: lib/kanji_to_katakana.$(DYLIB) lib/kanji_to_katakana/platform.rb
+	@echo "All done"
+
 clean:
 	rm -rf $(CLEAN)
 
 test: lib/kanji_to_katakana.$(DYLIB) lib/kanji_to_katakana/platform.rb
-	rspec
+	bundle exec rspec
 
 .PHONE: clean test
 $(V).SILENT:
