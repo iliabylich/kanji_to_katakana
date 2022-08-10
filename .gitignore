@@ -1,0 +1,22 @@
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+Gemfile.lock
+
+# rspec failure tracking
+.rspec_status
+
+*.o
+*.obj
+
+*.a
+*.so
+*.bundle
+
+# generated Ruby files
+lib/kanji_to_katakana/platform.rb

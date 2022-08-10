@@ -1,0 +1,9 @@
+require:
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    # This file is auto-generated
+    - lib/kanji_to_katakana/platform.rb
