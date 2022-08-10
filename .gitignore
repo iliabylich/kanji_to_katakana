@@ -14,9 +14,18 @@ Gemfile.lock
 *.o
 *.obj
 
+*.gem
+
 *.a
 *.so
 *.bundle
 
-# generated Ruby files
+kakasi-2.3.6
+kakasi-2.3.6.tar.gz
+libkakasi.h
+libkakasi.a
+
+# generated files
 lib/kanji_to_katakana/platform.rb
+lib/kanji_to_katakana/itaijidict
+lib/kanji_to_katakana/kanwadict

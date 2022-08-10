@@ -2,7 +2,15 @@
 
 require_relative 'lib/kanji_to_katakana/version'
 
-Gem::Specification.new do |spec|
+if File.exists?('lib/kanji_to_katakana.bundle')
+  dylib = 'lib/kanji_to_katakana.bundle'
+elsif File.exists?('lib/kanji_to_katakana.so')
+  dylib = 'lib/kanji_to_katakana.so'
+else
+  dylib = 'mising-dylib'
+end
+
+spec = Gem::Specification.new do |spec|
   spec.name = 'kanji_to_katakana'
   spec.version = KanjiToKatakana::VERSION
   spec.authors = ['Ilya Bylich']
@@ -13,11 +21,16 @@ Gem::Specification.new do |spec|
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  spec.files = Dir.chdir(File.expand_path(__dir__)) do
-    `git ls-files -z`.split("\x0").reject do |f|
-      (f == __FILE__) || f.match(%r{\A(?:(?:test|spec|features)/|\.(?:git|travis|circleci)|appveyor)})
-    end
-  end
+  spec.files = [
+    'lib/kanji_to_katakana/itaijidict',
+    'lib/kanji_to_katakana/kanwadict',
+    'lib/kanji_to_katakana/platform.rb',
+    'lib/kanji_to_katakana/version.rb',
+    dylib,
+    'lib/kanji_to_katakana.rb',
+    'kanji_to_katakana.gemspec',
+    'README.md',
+  ]
   spec.bindir = 'exe'
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']

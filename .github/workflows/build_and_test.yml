@@ -1,0 +1,47 @@
+name: build-and-test
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-and-test:
+    name: build and test (${{ matrix.build.os }})
+    runs-on: ${{ matrix.build.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - os: ubuntu-latest
+            platform: x86_64-darwin
+
+          - os: macos-latest
+            platform: x86_64-linux
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1.0'
+          bundler-cache: true
+
+      - name: compile
+        run: bundle exec rake compile
+
+      - name: test
+        run: bundle exec rake spec
+
+      - name: build
+        env:
+          PLATFORM: ${{ matrix.build.platform }}
+        run: bundle exec rake build_native
+
+      - name: upload .gem file
+        uses: actions/upload-artifact@v2
+        with:
+          path: kanji_to_katakana-${{ matrix.build.platform }}.gem
+          name: kanji_to_katakana-${{ matrix.build.platform }}.gem
