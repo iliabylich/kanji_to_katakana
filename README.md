@@ -1,8 +1,13 @@
 # KanjiToKatakana
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/kanji_to_katakana`. To experiment with that code, run `bin/console` for an interactive prompt.
+Kanji to Katakana translator, based on [Kakasi](http://kakasi.namazu.org/).
 
-TODO: Delete this and the text above, and describe your gem
+It's a native gem, but it's pre-compiled for the following architectures:
+
++ x86_64-linix
++ aarch64-linix
++ x86_64-darwin
++ arm64-darwin
 
 ## Installation
 
@@ -22,13 +27,23 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+require 'kanji_to_katakana'
+
+KanjiToKatakana.kanji_to_katakana('岡川1796, 8701131, 大分県大分市, JAPAN')
+# => 'オカカワ1796, 8701131, オオイタケンオオイタシ, JAPAN'
+
+KanjiToKatakana.kanji_to_katakana('non-kanji')
+# => 'non-kanji'
+```
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+1. Clone the repo
+2. Run `bundle install`
+3. Run `rake compile` to download Kakasi, build and compile it, and compile the gem
+4. Run `rspec` to run tests
+5. Run `PLATFORM=<rubygems platform> rake build_native` to get a `.gem` file
 
 ## Contributing
 
