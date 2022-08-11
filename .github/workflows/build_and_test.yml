@@ -15,10 +15,10 @@ jobs:
       matrix:
         build:
           - os: ubuntu-latest
-            platform: x86_64-darwin
+            platform: x86_64-linux
 
           - os: macos-latest
-            platform: x86_64-linux
+            platform: x86_64-darwin
 
     steps:
       - uses: actions/checkout@v3
