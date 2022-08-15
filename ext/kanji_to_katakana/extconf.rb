@@ -1,6 +1,7 @@
 require 'mkmf'
 require 'open-uri'
 require 'rbconfig'
+require 'open3'
 
 ROOT = File.expand_path('../..', __dir__)
 WORKDIR = Dir.pwd
@@ -9,10 +10,18 @@ KAKASI_URL = 'https://github.com/iliabylich/kanji_to_katakana/releases/download/
 $stderr.puts "ROOT = #{ROOT}"
 $stderr.puts "Dir.pwd = #{Dir.pwd}"
 
-def sh(cmd)
-  $stderr.puts cmd
-  system(cmd)
-  raise "Failed to execute #{cmd.inspect}" if $? != 0
+def sh(cmd, env: {})
+  $stderr.puts "Running #{cmd}"
+  stdout, stderr, status = Open3.capture3(env, cmd)
+
+  unless status.success?
+    $stderr.puts 'Command failed'
+    $stderr.puts "[stdout]\n#{stdout}"
+    $stderr.puts "[stderr]\n#{stderr}"
+    exit 1
+  end
+
+  puts stdout
 end
 
 # Compute the platform
@@ -36,6 +45,10 @@ when 'linux-gnu'
 else
   raise "Unsupported build_os #{RbConfig::CONFIG['build_os']}"
 end
+
+ENABLE_ASAN = !ENV['KANJI_TO_KATAKANA_ENABLE_ASAN'].nil?
+
+$CFLAGS << ' -fsanitize=address' if ENABLE_ASAN
 
 platform = "#{build_cpu}-#{build_os}"
 $stderr.puts "PLATFORM = #{platform}"
@@ -76,8 +89,16 @@ Dir.chdir(ROOT) do
     sh('patch -p1 < ../0001-fix-configure-with-the-latest-iconv.patch')
     sh('rm configure')
     sh('autoconf')
-    kaksi_cflags = linux ? ' -fPIC' : ''
-    sh("./configure --prefix=$PWD/local CFLAGS='#{kaksi_cflags}'")
+    kakasi_cflags = []
+    kakasi_cflags << '-fPIC' if linux
+    kakasi_cflags << '-g'
+    kakasi_cflags << '-fsanitize=address' if ENABLE_ASAN
+
+    begin
+      sh('./configure --prefix=$PWD/local', env: { 'CFLAGS' => kakasi_cflags.join(' ') })
+    ensure
+      sh('cat config.log')
+    end
 
     # build
     sh('make')
@@ -95,7 +116,7 @@ Dir.chdir(ROOT) do
   end
 
   # and remove all artifacts
-  sh('rm -r kakasi-2.3.6')
+  sh('rm -r kakasi-2.3.6') unless ENABLE_ASAN
   sh('rm kakasi-2.3.6.tar.gz')
 end
 

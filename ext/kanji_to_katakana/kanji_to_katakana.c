@@ -28,6 +28,7 @@ VALUE rb_kanji_to_katakana(VALUE self, VALUE string) {
 
     // Run translation
     char *buf = kakasi_do(ptr);
+    free(ptr);
 
     // Construct CP932-encoded string and re-encode it in UTF-8
     VALUE decoded = rb_enc_str_new_cstr(buf, rb_to_encoding(cp932));

@@ -10,9 +10,13 @@ require 'rake/clean'
 CLEAN.include('lib/kanji_to_katakana.bundle')
 CLEAN.include('lib/kanji_to_katakana.so')
 CLEAN.include('lib/kanji_to_katakana/platform.rb')
+CLEAN.include('lib/kanji_to_katakana/itaijidict')
+CLEAN.include('lib/kanji_to_katakana/kanwadict')
 CLEAN.include('kakasi-2.3.6.tar.gz')
 CLEAN.include('kakasi-2.3.6')
 CLEAN.include('tmp')
+CLEAN.include('libkakasi.h')
+CLEAN.include('libkakasi.a')
 
 require 'rake/extensiontask'
 Rake::ExtensionTask.new('kanji_to_katakana')

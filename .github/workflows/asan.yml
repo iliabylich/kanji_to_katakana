@@ -1,0 +1,54 @@
+name: test-with-asan
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test-with-asan:
+    name: test with ASAN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: install ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1.0'
+          bundler-cache: true
+
+      - name: compile
+        env:
+          KANJI_TO_KATAKANA_ENABLE_ASAN: 1
+          ASAN_OPTIONS: detect_leaks=0
+        run: bundle exec rake compile
+
+      - name: make sure kakasi is linked with libasan
+        run: ldd kakasi-2.3.6/local/bin/kakasi
+
+      - name: make sure kakasi has no ASAN/LSAN errors
+        env:
+          ASAN_OPTIONS: detect_leaks=1
+        run: echo "岡川1796, 8701131, 大分県大分市, JAPAN" | ./kakasi-2.3.6/local/bin/kakasi -JK -iutf8 -outf8
+
+      - name: run kakasi tests under ASAN/LSAN
+        env:
+          ASAN_OPTIONS: detect_leaks=1
+        run: cd kakasi-2.3.6 && make check
+
+      - name: find libasan
+        run: echo "LIBASAN=$(gcc -print-file-name=libasan.so)" >> $GITHUB_ENV
+
+      - name: check our leaksan suppression list
+        env:
+          LSAN_OPTIONS: suppressions=LSan.supp
+          ASAN_OPTIONS: detect_leaks=1
+        run: LD_PRELOAD=$LIBASAN ruby -e 'p 42'
+
+      - name: run tests with ASAN/LSAN
+        env:
+          LSAN_OPTIONS: suppressions=LSan.supp
+          ASAN_OPTIONS: detect_leaks=1
+        run: LD_PRELOAD=$LIBASAN ruby -Ilib -Ispec -rbundler/setup -rrspec/autorun -rspec_helper spec/kanji_to_katakana_spec.rb
